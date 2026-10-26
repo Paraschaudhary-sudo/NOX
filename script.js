@@ -14,7 +14,15 @@
   };
   const escapeHTML = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const getTitle = id => titles.find(t=>t.id===id);
-  function toast(message){const el=$("#toast");el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),2300);}
+  let soundEnabled=localStorage.getItem("nox_sound")!=="off";
+  function playSound(kind="soft"){
+    if(!soundEnabled)return;
+    try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;const ctx=new Ctx();const now=ctx.currentTime;
+      const notes=kind==="success"?[523.25,659.25,783.99]:kind==="save"?[659.25,880]:[440,554.37];
+      notes.forEach((freq,i)=>{const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type="sine";osc.frequency.value=freq;gain.gain.setValueAtTime(.0001,now+i*.075);gain.gain.exponentialRampToValueAtTime(.055,now+i*.075+.015);gain.gain.exponentialRampToValueAtTime(.0001,now+i*.075+.16);osc.connect(gain);gain.connect(ctx.destination);osc.start(now+i*.075);osc.stop(now+i*.075+.18);});setTimeout(()=>ctx.close(),600);
+    }catch(_){/* Sound is a progressive enhancement; never block an action. */}
+  }
+  function toast(message){const el=$("#toast");el.textContent=message;el.classList.add("show");if(/saved|created|added|marked|account|review/i.test(message))playSound(/account|created/i.test(message)?"success":"save");clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove("show"),2300);}
   function posterMarkup(t){
     const alt=escapeHTML(t.title);
     return `<div class="poster-image-wrap"><img class="poster-image" src="${escapeHTML(t.poster||"")}" alt="${alt} poster" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden')"><div class="poster-fallback ${t.poster?'hidden':''}"><small>NOX / ${escapeHTML(t.type.toUpperCase())}</small>${alt}</div><div class="poster-overlay"><div class="poster-actions"><button data-action="watchlist" data-id="${t.id}" aria-label="Add ${alt} to watchlist" title="Add to watchlist">＋</button><button data-action="watched" data-id="${t.id}" aria-label="Mark ${alt} as watched" title="Mark watched">✓</button></div><span class="poster-rating">★ ${Number(t.rating||0).toFixed(1)}</span></div></div>`;
@@ -70,9 +78,19 @@
     if(key==="watched")items=state.watched.map(getTitle).filter(Boolean);
     if(key==="reviews")items=state.reviews.map(r=>({...getTitle(r.id),review:r})).filter(t=>t.id);
     if(key==="collections")items=state.collections;
-    const labels={watchlist:"My Watchlist",watched:"Watched List",reviews:"My Ratings & Reviews",collections:"Custom Collections"};
-    let content=`<div class="account-tabs">${Object.entries(labels).map(([k,v])=>`<button data-library="${k}" class="${key===k?"active":""}">${v}</button>`).join("")}</div>`;
-    if(key==="collections"){
+    if(key==="discover"){
+      const favGenres=state.reviews.flatMap(r=>getTitle(r.id)?.genres||[]);
+      const favCountry=state.reviews.map(r=>getTitle(r.id)?.country).filter(Boolean);
+      items=[...titles].filter(t=>!state.watched.includes(t.id)).sort((a,b)=>{
+        const score=t=>((t.genres||[]).filter(g=>favGenres.includes(g)).length*2)+(favCountry.includes(t.country)?1:0)+Number(t.rating||0)/10;
+        return score(b)-score(a);
+      }).slice(0,8);
+    }
+    const labels={watchlist:"My Watchlist",watched:"Watched List",reviews:"My Ratings & Reviews",collections:"Custom Collections",discover:"Discover For Me"};
+    let content=`<div class="account-session"><span>Signed in as <strong>${escapeHTML(state.profile?.name||"NOX Viewer")}</strong><small>Local browser profile</small></span><button type="button" data-logout>Log out</button></div><div class="account-tabs">${Object.entries(labels).map(([k,v])=>`<button data-library="${k}" class="${key===k?"active":""}">${v}</button>`).join("")}</div>`;
+    if(key==="discover"){
+      content+=`<p class="poster-meta">Picks are based on your local ratings when available, then catalogue ratings. Save or mark a title to build your cinema profile.</p><div class="library-list">${items.map(t=>`<div class="library-item"><span><strong>${escapeHTML(t.title)}</strong><br><small class="poster-meta">${t.year} · ${escapeHTML(t.country)} · ★ ${Number(t.rating||0).toFixed(1)}</small></span><button data-open-title="${t.id}">Explore</button><button data-action="watchlist" data-id="${t.id}">＋</button></div>`).join("")}</div>`;
+    } else if(key==="collections"){
       content+=`<form id="collectionForm"><input id="collectionName" maxlength="60" placeholder="Collection name (e.g. Mind-bending nights)" required><button class="account-button" type="submit">Create collection</button></form>`;
       content+=items.length?`<div class="library-list">${items.map(c=>`<div class="library-item"><span><strong>${escapeHTML(c.name)}</strong><br><small class="poster-meta">${c.ids.length} saved titles</small></span><button data-delete-collection="${c.id}">Delete</button></div>`).join("")}</div>`:`<p class="poster-meta">Your custom collections will appear here.</p>`;
     } else if(key==="reviews"){
@@ -84,14 +102,30 @@
   }
   function openAccount(tab="watchlist"){
     state.activeLibrary=tab;
-    const profile=state.profile;
-    $("#accountContent").innerHTML=`<div class="profile-summary"><strong>${escapeHTML(profile?.name||"Your cinema journal")}</strong><p>${profile?"A local browser profile · not an online account":"Create a local profile to personalise this browser. No password or server account is used."}</p></div><form id="profileForm"><input id="profileName" maxlength="40" placeholder="Display name (optional)" value="${escapeHTML(profile?.name||"")}"><button class="account-button" type="submit">Save local profile</button></form><p class="poster-meta">NOX does not send your profile, ratings or reviews to a server. This is not secure authentication or a shared public profile.</p>`;
+    if(!state.profile){
+      state.authMode="signup";
+      renderAuth();
+      setOverlay("accountOverlay",true);
+      return;
+    }
     setOverlay("accountOverlay",true);
-    if(tab!=="profile"){state.activeLibrary=tab;renderLibrary();}
+    if(tab==="profile"){
+      $("#accountContent").innerHTML=`<div class="profile-summary"><strong>${escapeHTML(state.profile.name||"NOX Viewer")}</strong><p>${escapeHTML(state.profile.email||"")} · Saved in this browser only.</p></div><button class="account-button" data-logout>Log out</button><p class="poster-meta">This is a local demo account, not a secure online account. Data stays in this browser and does not sync across devices.</p>`;
+    } else renderLibrary();
+  }
+  function renderAuth(){
+    const mode=state.authMode||"signup";
+    $("#accountContent").innerHTML=`<div class="auth-intro"><span class="auth-mark">N<span>O</span>X</span><p>${mode==="signup"?"Create your personal cinema journal.":"Welcome back to your cinema journal."}</p></div><div class="account-tabs auth-tabs"><button type="button" data-auth-mode="signup" class="${mode==="signup"?"active":""}">Create account</button><button type="button" data-auth-mode="login" class="${mode==="login"?"active":""}">Log in</button></div><form id="accountAuthForm" data-mode="${mode}" class="auth-form">${mode==="signup"?'<label>Display name<input id="authName" maxlength="40" placeholder="What should NOX call you?" required></label>':''}<label>Email<input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required></label><label>Password<input id="authPassword" type="password" minlength="4" autocomplete="${mode==="signup"?"new-password":"current-password"}" placeholder="At least 4 characters" required></label><button class="account-button" type="submit">${mode==="signup"?"Create my account ↗":"Log in ↗"}</button><p class="poster-meta">Demo mode: account data is stored only in this browser. It is not secure authentication and will not sync across devices. Use no real or reused password.</p></form>`;
+  }
+  async function passwordDigest(value){
+    if(window.crypto?.subtle){const bytes=new TextEncoder().encode(value);const digest=await crypto.subtle.digest("SHA-256",bytes);return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,"0")).join("");}
+    let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619);}return "local-"+(h>>>0).toString(16);
   }
   function showLibrary(tab){state.activeLibrary=tab;setOverlay("accountOverlay",true);renderLibrary();}
   document.addEventListener("click",e=>{
     const close=e.target.closest("[data-close]");if(close){setOverlay(close.dataset.close,false);return;}
+    const authMode=e.target.closest("[data-auth-mode]");if(authMode){state.authMode=authMode.dataset.authMode;renderAuth();return;}
+    const logout=e.target.closest("[data-logout]");if(logout){state.profile=null;save("nox_profile",null);openAccount("watchlist");toast("Logged out of this browser.");return;}
     const open=e.target.closest("[data-open-title]");if(open){renderDetail(open.dataset.openTitle);setOverlay("searchOverlay",false);setOverlay("accountOverlay",false);return;}
     const action=e.target.closest("[data-action]");if(action){e.stopPropagation();toggleId(action.dataset.action,action.dataset.id);return;}
     const rate=e.target.closest("[data-rate]");if(rate){state.rating=Number(rate.dataset.rate);$$("[data-rate]").forEach(b=>b.classList.toggle("selected",Number(b.dataset.rate)<=state.rating));return;}
@@ -107,6 +141,7 @@
   document.addEventListener("keydown",e=>{if(e.key==="Escape")$$(".overlay.open").forEach(o=>setOverlay(o.id,false));if((e.key==="Enter"||e.key===" ")&&e.target.matches(".poster-card")){e.preventDefault();renderDetail(e.target.dataset.openTitle);}});
   $("#heroSearchForm").addEventListener("submit",e=>{e.preventDefault();state.query=$("#heroSearchInput").value.trim();state.type="All";state.genre="All";state.country="All";$("#genreFilter").value="All";$("#countryFilter").value="All";$$("[data-type]").forEach(b=>b.classList.toggle("active",b.dataset.type==="All"));renderCatalogue();$("#trending").scrollIntoView({behavior:"smooth"});});
   $("#openSearch").addEventListener("click",()=>openSearch());
+  $("#soundToggle").addEventListener("click",()=>{soundEnabled=!soundEnabled;localStorage.setItem("nox_sound",soundEnabled?"on":"off");$("#soundToggle").textContent=soundEnabled?"♪":"♪̸";$("#soundToggle").classList.toggle("sound-off",!soundEnabled);if(soundEnabled)playSound("success");toast(soundEnabled?"Sound effects enabled.":"Sound effects muted.");});
   $("#modalSearchInput").addEventListener("input",e=>renderSearchResults(e.target.value.trim()));
   $("#accountButton").addEventListener("click",()=>openAccount("watchlist"));
   $("#genreFilter").addEventListener("change",e=>{state.genre=e.target.value;renderCatalogue();});
@@ -116,7 +151,20 @@
   $("#menuToggle").addEventListener("click",()=>$("#mainNav").classList.toggle("open"));
   $$("#mainNav a").forEach(a=>a.addEventListener("click",()=>$("#mainNav").classList.remove("open")));
   $("#titleDetail").addEventListener("click",e=>{if(e.target.id==="saveReview"){const id=e.target.dataset.id;const text=$("#reviewText").value.trim();const rating=state.rating||Number(state.reviews.find(r=>r.id===id)?.rating)||0;const idx=state.reviews.findIndex(r=>r.id===id);const entry={id,rating,text,updatedAt:new Date().toISOString()};if(idx>=0)state.reviews[idx]=entry;else state.reviews.push(entry);save("nox_reviews",state.reviews);state.rating=0;renderCounts();renderDetail(id);toast("Your review was saved in this browser.");}});
-  $("#accountContent").addEventListener("submit",e=>{e.preventDefault();if(e.target.id==="profileForm"){const name=$("#profileName").value.trim();state.profile=name?{name}:null;save("nox_profile",state.profile);openAccount(state.activeLibrary);toast("Local profile saved.");}if(e.target.id==="collectionForm"){const name=$("#collectionName").value.trim();if(!name)return;state.collections.push({id:"c"+Date.now(),name,ids:[]});save("nox_collections",state.collections);renderCounts();renderLibrary();toast("Collection created.");}});
+  $("#accountContent").addEventListener("submit",async e=>{e.preventDefault();if(e.target.id==="accountAuthForm"){
+      const mode=e.target.dataset.mode,email=$("#authEmail").value.trim().toLowerCase(),password=$("#authPassword").value;
+      const accounts=safeParse("nox_local_accounts",{});const digest=await passwordDigest(password);
+      if(mode==="signup"){
+        const name=$("#authName").value.trim();if(!name){toast("Add a display name first.");return;}if(accounts[email]){toast("An account with this email exists. Log in instead.");state.authMode="login";renderAuth();return;}
+        accounts[email]={name,passHash:digest};save("nox_local_accounts",accounts);state.profile={name,email};save("nox_profile",state.profile);state.activeLibrary="watchlist";openAccount("watchlist");toast("Account created. Welcome to NOX!");playSound("success");return;
+      } else {
+        if(!accounts[email]||accounts[email].passHash!==digest){toast("Email or password doesn't match this browser.");return;}
+        state.profile={name:accounts[email].name,email};save("nox_profile",state.profile);openAccount("watchlist");toast("Welcome back to NOX!");playSound("success");return;
+      }
+    }
+    if(e.target.id==="profileForm"){const name=$("#profileName").value.trim();state.profile=name?{...state.profile,name}:null;save("nox_profile",state.profile);openAccount(state.activeLibrary);toast("Local profile saved.");}
+    if(e.target.id==="collectionForm"){const name=$("#collectionName").value.trim();if(!name)return;state.collections.push({id:"c"+Date.now(),name,ids:[]});save("nox_collections",state.collections);renderCounts();renderLibrary();toast("Collection created.");}
+  });
   $("#year").textContent=new Date().getFullYear();
   setupFilters();renderCatalogue();
   window.setTimeout(()=>$("#introScreen").classList.add("done"),1250);

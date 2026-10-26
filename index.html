@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#08090C" />
+  <meta name="description" content="NOX — Beyond the Screen. Discover films, explore worlds, find your next obsession." />
+  <title>NOX — Beyond the Screen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="intro-screen" id="introScreen" aria-hidden="true">
+    <div class="intro-mark">N<span>O</span>X</div>
+    <p>BEYOND THE SCREEN</p>
+  </div>
+
+  <header class="site-header">
+    <a class="brand" href="#home" aria-label="NOX home"><span class="brand-mark">N<span>O</span>X</span><span class="brand-tagline">BEYOND THE SCREEN</span></a>
+    <nav class="main-nav" id="mainNav">
+      <a href="#discover">Discover</a><a href="#movies">Movies</a><a href="#series">Series</a><a href="#anime">Anime & Animation</a><a href="#founder">About</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-button" id="openSearch" aria-label="Open search" title="Search">⌕</button>
+      <button class="account-button" id="accountButton">My Cinema</button>
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-backdrop" id="heroBackdrop"></div><div class="hero-grain"></div>
+      <div class="hero-content">
+        <p class="eyebrow"><span class="eyebrow-line"></span> YOUR NEXT STORY STARTS HERE</p>
+        <h1>Some stories<br>stay <em>with you.</em></h1>
+        <p class="hero-description">Discover films. Explore worlds. Find your next obsession.</p>
+        <form class="search-form" id="heroSearchForm">
+          <span aria-hidden="true">⌕</span><input id="heroSearchInput" type="search" placeholder="A title, a feeling, a whole new world…" aria-label="Search titles">
+          <button type="submit">Explore <span>↗</span></button>
+        </form>
+        <div class="hero-meta"><span>FILMS</span><i></i><span>SERIES</span><i></i><span>ANIME</span><i></i><span>EVERY KIND OF STORY</span></div>
+      </div>
+      <div class="hero-index"><span>01</span><span class="index-rule"></span><span>THE ART OF DISCOVERY</span></div>
+      <a class="scroll-cue" href="#discover"><span></span> SCROLL TO DISCOVER</a>
+    </section>
+
+    <section class="section-wrap discovery-strip" id="discover">
+      <div class="section-heading">
+        <div><p class="eyebrow">A WORLD OF STORIES</p><h2>What are you <em>in the mood for?</em></h2></div>
+        <p class="section-note">No endless scrolling. Just a better place to begin.</p>
+      </div>
+      <div class="mood-grid">
+        <button class="mood-card" data-mood="Mind-bending"><span class="mood-number">01</span><span class="mood-symbol">◉</span><strong>Mind-bending</strong><small>Question everything</small></button>
+        <button class="mood-card" data-mood="Dark & twisted"><span class="mood-number">02</span><span class="mood-symbol">◐</span><strong>Dark & twisted</strong><small>Into the unknown</small></button>
+        <button class="mood-card" data-mood="Adrenaline"><span class="mood-number">03</span><span class="mood-symbol">↗</span><strong>Adrenaline</strong><small>Never sit still</small></button>
+        <button class="mood-card" data-mood="Feel something"><span class="mood-number">04</span><span class="mood-symbol">♡</span><strong>Feel something</strong><small>Stories that stay</small></button>
+        <button class="mood-card" data-mood="Other worlds"><span class="mood-number">05</span><span class="mood-symbol">✳</span><strong>Other worlds</strong><small>Escape reality</small></button>
+      </div>
+    </section>
+
+    <section class="section-wrap catalog-section" id="trending">
+      <div class="section-heading"><div><p class="eyebrow">THE CONVERSATION STARTERS</p><h2>Popular <em>right now.</em></h2></div><button class="text-link" data-show-all>Explore catalogue ↗</button></div>
+      <div class="filter-row">
+        <div class="filter-pills" id="typeFilters"><button class="filter-pill active" data-type="All">All</button><button class="filter-pill" data-type="Movie">Movies</button><button class="filter-pill" data-type="Series">Series</button><button class="filter-pill" data-type="Anime">Anime</button><button class="filter-pill" data-type="Animation">Animation</button></div>
+        <select id="genreFilter" aria-label="Filter by genre"><option value="All">All genres</option></select>
+        <select id="countryFilter" aria-label="Filter by country"><option value="All">All cinema</option></select>
+      </div>
+      <div class="poster-grid" id="popularGrid"></div>
+      <div class="empty-state hidden" id="emptyState"><span>◌</span><h3>No stories found.</h3><p>Try another search or clear a filter.</p><button class="account-button" id="clearFilters">Clear filters</button></div>
+    </section>
+
+    <section class="section-wrap feature-section" id="movies">
+      <div class="section-heading"><div><p class="eyebrow">THE ESSENTIALS</p><h2>The NOX <em>100 · Movies</em></h2></div><p class="section-note">A starting point for the stories everyone should experience.</p></div>
+      <div class="poster-grid compact-grid" id="moviesGrid"></div>
+    </section>
+
+    <section class="section-wrap feature-section" id="series">
+      <div class="section-heading"><div><p class="eyebrow">ONE MORE EPISODE</p><h2>The NOX <em>100 · Series</em></h2></div><p class="section-note">The worlds you move into — and don't want to leave.</p></div>
+      <div class="poster-grid compact-grid" id="seriesGrid"></div>
+    </section>
+
+    <section class="cinema-section">
+      <div class="section-wrap">
+        <div class="section-heading"><div><p class="eyebrow">CROSS BORDERS, FIND STORIES</p><h2>Explore by <em>cinema.</em></h2></div></div>
+        <div class="cinema-grid">
+          <button class="cinema-card cinema-hollywood" data-country="United States"><span>01 / THE BIG SCREEN</span><strong>Hollywood</strong><small>Blockbusters & bold visions ↗</small></button>
+          <button class="cinema-card cinema-india" data-country="India"><span>02 / MANY LANGUAGES, ONE PASSION</span><strong>Indian Cinema</strong><small>Stories from every corner ↗</small></button>
+          <button class="cinema-card cinema-korea" data-country="South Korea"><span>03 / UNEXPECTED TWISTS</span><strong>Korean Cinema</strong><small>Feel everything. Trust no one. ↗</small></button>
+          <button class="cinema-card cinema-world" data-country="Japan"><span>04 / WORLDS BEYOND</span><strong>World Cinema</strong><small>Look beyond the familiar ↗</small></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-wrap anime-section" id="anime">
+      <div class="anime-art"><div class="anime-orb"></div><span>ANIMATION IS NOT A GENRE. IT'S A UNIVERSE.</span></div>
+      <div class="anime-copy"><p class="eyebrow">ANIME · CARTOONS · ANIMATION</p><h2>Drawn worlds.<br><em>Real feelings.</em></h2><p>From Japanese anime and imaginative fantasy to Indian cartoons and international animation — explore stories that don't need to be live-action to feel alive.</p><button class="account-button" data-type-jump="Anime">Explore animation ↗</button></div>
+    </section>
+
+    <section class="section-wrap verdict-section">
+      <div class="verdict-mark">N<span>O</span>X</div>
+      <div><p class="eyebrow">THE NOX VERDICT</p><h2>Not just what's popular.<br><em>What's worth your time.</em></h2><p>Find the acclaimed classics, the hidden gems and the strange little stories that become your favourites.</p></div>
+    </section>
+
+    <section class="section-wrap personal-section" id="myCinema">
+      <div class="section-heading"><div><p class="eyebrow">YOUR PRIVATE CINEMA JOURNAL</p><h2>Your stories. <em>Your shelf.</em></h2></div><p class="section-note">Your saved data stays in this browser.</p></div>
+      <div class="personal-grid">
+        <button class="personal-card" data-library="watchlist"><span>↗</span><strong>My Watchlist</strong><small>For the next movie night</small><b id="watchlistCount">0 titles</b></button>
+        <button class="personal-card" data-library="watched"><span>✓</span><strong>Watched List</strong><small>Your own story archive</small><b id="watchedCount">0 titles</b></button>
+        <button class="personal-card" data-library="reviews"><span>✳</span><strong>My Ratings & Reviews</strong><small>Your take, your taste</small><b id="reviewsCount">0 reviews</b></button>
+        <button class="personal-card" data-library="collections"><span>▤</span><strong>Custom Collections</strong><small>Build your own lists</small><b id="collectionsCount">0 collections</b></button>
+      </div>
+    </section>
+
+    <section class="section-wrap founder-section" id="founder">
+      <div class="founder-inner">
+        <div class="founder-stamp"><span>BUILT BY A VIEWER</span><strong>PC.</strong><small>FOUNDER · NOX</small></div>
+        <div class="founder-photo">
+  <img src="images/parasch.jpg"
+       alt="Paras Chaudhary, founder of NOX">
+</div>
+        <div class="founder-story"><p class="eyebrow">A LITTLE ABOUT THE PERSON BEHIND THE SCREEN</p><h2>Hey, I’m <em>Paras Chaudhary.</em></h2><h3>A cinema lover. A curious viewer. The mind behind NOX.</h3><p>I’ve always been fascinated by cinema — the stories, the characters, the emotions, and the worlds that stay with you long after the screen goes dark.</p><p>From legendary movies and binge-worthy web series to anime and timeless cartoons, I love exploring different kinds of stories. There’s always something new to discover, and sometimes, finding what to watch is harder than watching it.</p><p><strong>That’s where NOX comes in.</strong></p><p>I created NOX with one simple idea: to make discovering your next watch easier. Whether you’re searching for a mind-bending thriller, an underrated movie, a series worth bingeing, or an anime you’ve never heard of, NOX is built to help you find your kind of story.</p><p>Because choosing what to watch shouldn’t be a struggle. It should be part of the experience.</p><h3 class="founder-signoff">Find your next obsession.</h3><p class="founder-byline">— Paras Chaudhary, Founder of NOX</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><a class="brand" href="#home"><span class="brand-mark">N<span>O</span>X</span><span class="brand-tagline">BEYOND THE SCREEN</span></a><p>For the love of stories, in every form.</p><span>© <span id="year"></span> NOX · MADE FOR CURIOUS VIEWERS</span></footer>
+
+  <div class="overlay" id="titleOverlay" role="dialog" aria-modal="true" aria-label="Title details"><div class="dialog title-dialog"><button class="dialog-close" data-close="titleOverlay" aria-label="Close">×</button><div id="titleDetail"></div></div></div>
+  <div class="overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="Search NOX"><div class="dialog search-dialog"><button class="dialog-close" data-close="searchOverlay" aria-label="Close">×</button><p class="eyebrow">FIND YOUR NEXT OBSESSION</p><h2>What are we <em>watching?</em></h2><input id="modalSearchInput" type="search" placeholder="Search movies, series, anime…"><div id="searchResults" class="search-results"></div></div></div>
+  <div class="overlay" id="accountOverlay" role="dialog" aria-modal="true" aria-label="My Cinema"><div class="dialog account-dialog"><button class="dialog-close" data-close="accountOverlay" aria-label="Close">×</button><p class="eyebrow">YOUR CINEMA, YOUR RULES</p><h2>My <em>Cinema.</em></h2><div id="accountContent"></div></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="data.js"></script><script src="script.js"></script>
+</body>
+</html>
